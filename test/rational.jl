@@ -1,6 +1,7 @@
 # This file is a part of Julia. License is MIT: https://julialang.org/license
 
 using Test
+using Base.MathConstants
 
 @testset "Rationals" begin
     @test 1//1 == 1
@@ -879,4 +880,20 @@ end
     @test Float16(6.0e-8) == 1//16777216
     @test 1.0 != big(1//0)
     @test Inf == big(1//0)
+end
+
+@testset "Irrational vs Rational{BigInt} comparison (#60769)" begin
+    p = precision(BigFloat)
+    for x in (π, ℯ, γ, catalan, φ)
+        r = rationalize(BigInt, x)
+        @test (x < r) == (BigFloat(x, precision=p+32) < BigFloat(r, precision=p+32))
+        e1 = eps(float(x))
+        e2 = Base._eps(x)
+        for tol in (e1 * 2.0.^(-24:8:24)..., e2 * 2.0.^(-64:16:64)...)
+            r = rationalize(BigInt, x, tol)
+            pp = max(p, exponent(x) - exponent(tol) + 32)
+            @test (x < r) == (BigFloat(x, precision=pp) < BigFloat(r, precision=pp))
+        end
+        @test_throws ArgumentError rationalize(BigInt, x, 0)
+    end
 end
