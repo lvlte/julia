@@ -156,7 +156,7 @@ function _rationalize_irrational(::Type{T}, x::AbstractIrrational, tol::Real) wh
     tol ≥ eps(Float64, x) && return rationalize(T, Float64(x), tol/2)
     tol ≥ eps(BigFloat, x)/2 && return rationalize(T, big(x), tol)
     # need more precision
-    p = exponent(x) - exponent(tol) + 8
+    p = exponent(x) - exponent(tol)
     setprecision(BigFloat, p) do
         return rationalize(T, big(x), tol)
     end
