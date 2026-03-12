@@ -269,14 +269,17 @@ function rationalize(::Type{T}, x::Union{AbstractFloat, Rational}, tol::Real) wh
     while r > nt
         try
             ia = convert(T,a)
-
             np = checked_add(checked_mul(ia,p),pp)
             nq = checked_add(checked_mul(ia,q),qq)
             p, pp = np, p
             q, qq = nq, q
         catch e
             isa(e,InexactError) || isa(e,OverflowError) || rethrow()
-            return p // q
+            (isinf(p // q) || iszero(p // q)) && return p // q
+            # find best semiconvergent that fits in T
+            z, zz = abs(p) > q ? abs.((p, pp)) : (q, qq)
+            ia = fld(typemax(T) - zz, z)
+            return ia > a/2 ? (ia*p + pp) // (ia*q + qq) : p // q
         end
 
         # naive approach of using
@@ -301,7 +304,10 @@ function rationalize(::Type{T}, x::Union{AbstractFloat, Rational}, tol::Real) wh
         return np // nq
     catch e
         isa(e,InexactError) || isa(e,OverflowError) || rethrow()
-        return p // q
+        (isinf(p // q) || iszero(p // q)) && return p // q
+        z, zz = abs(p) > q ? abs.((p, pp)) : (q, qq)
+        ia = fld(typemax(T) - zz, z)
+        return ia > div(x,y)/2 ? (ia*p + pp) // (ia*q + qq) : p // q
     end
 end
 rationalize(::Type{T}, x::AbstractFloat; tol::Real = eps(x)) where {T<:Integer} = rationalize(T, x, tol)
