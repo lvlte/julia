@@ -277,7 +277,7 @@ function rationalize(::Type{T}, x::Union{AbstractFloat, Rational}, tol::Real) wh
             isa(e,InexactError) || isa(e,OverflowError) || rethrow()
             (isinf(p // q) || iszero(p // q)) && return p // q
             # find best semiconvergent that fits in T
-            z, zz = abs(p) > q ? abs.((p, pp)) : (q, qq)
+            z, zz = abs(p) > q ? (abs(p), abs(pp)) : (q, qq)
             ia = fld(typemax(T) - zz, z)
             return ia > a/2 ? (ia*p + pp) // (ia*q + qq) : p // q
         end
